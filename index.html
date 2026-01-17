@@ -527,7 +527,7 @@
         } catch (error) {
           setSegments(currentText.split('').map((char, idx) => ({ word: char, index: idx, isWordLike: true })));
         }
-      }, [inputText, isSentenceMode, currentSentenceIndex]);
+      }, [inputText, isSentenceMode, currentSentenceIndex, sentences]);
 
       useEffect(() => {
         const handleEnd = () => { setIsPlaying(false); setHighlightIndex(-1); };
