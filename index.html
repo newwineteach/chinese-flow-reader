@@ -224,10 +224,12 @@
         playAI: "聽 AI 發音",
         playMyRec: "聽我的錄音",
         compare: "聽聽差別",
-        feedback: "評語",
-        excellent: "太棒了！您的發音非常準確！",
-        good: "很不錯！只有少數地方需要加強。",
-        keepTrying: "繼續加油！多聽幾次 AI 發音，模仿語調。",
+        feedbackTitle: "👨‍🏫 華語語音大師點評",
+        excellent: "太完美了！您的發音簡直跟母語者一樣！Master 給你滿分！",
+        great: "非常標準！發音很清晰，語調也很自然，繼續保持！",
+        good: "很不錯！大部分都說對了，注意聲調的起伏會更好。",
+        fair: "聽得懂，但有些發音還不夠精準。試著放慢速度，模仿 AI 的語調。",
+        keepTrying: "Master 覺得你有點急躁了。請放慢速度，一個字一個字清楚地唸出來。再來一次！",
         noRec: "尚未錄音",
         downloadRec: "下載錄音",
         comparePlay: "對比播放",
@@ -283,10 +285,12 @@
         playAI: "Hear AI",
         playMyRec: "Hear Me",
         compare: "Compare",
-        feedback: "Feedback",
-        excellent: "Excellent! Your pronunciation is very accurate!",
-        good: "Good job! Just a few spots to polish.",
-        keepTrying: "Keep trying! Listen to the AI and mimic the tone.",
+        feedbackTitle: "👨‍🏫 Master's Feedback",
+        excellent: "Perfect! Native-like pronunciation! Full marks from the Master!",
+        great: "Very standard! Clear and natural tone. Keep it up!",
+        good: "Good! Mostly correct, just watch your tones.",
+        fair: "Understandable, but needs precision. Slow down and mimic the AI.",
+        keepTrying: "The Master thinks you're rushing. Slow down, pronounce each word clearly. Try again!",
         noRec: "No Recording",
         downloadRec: "Download",
         comparePlay: "Compare Play",
@@ -305,11 +309,11 @@
         settings: "Pengaturan",
         rate: "Kecepatan",
         voice: "Suara",
-        defaultVoice: "Default",
-        size: "Ukuran Teks",
+        defaultVoice: "Bawaan",
+        size: "Ukuran Font",
         blockMode: "Mode Blok",
         textMode: "Mode Teks",
-        play: "Baca Keras",
+        play: "Baca",
         pause: "Jeda",
         record: "Latihan",
         stopRecord: "Berhenti",
@@ -317,31 +321,33 @@
         reading: "Membaca...",
         ready: "Siap",
         accuracy: "Akurasi",
-        clickHint: "Klik kata untuk mendengarkan",
-        yourSpeech: "Anda mengatakan:",
+        clickHint: "Klik kata untuk dengar",
+        yourSpeech: "Anda bilang:",
         listening: "Mendengarkan pelafalan Anda...",
-        browserHint: "Catatan: Mic mungkin diblokir di Google Sites.",
+        browserHint: "Catatan: Akses mikrofon sering diblokir di embed Google Sites.",
         resetTitle: "Reset semua",
         emptyHint: "Silakan pilih pelajaran di sebelah kiri...",
         selectLesson: "Pilih Pelajaran",
         selectPara: "Pilih Paragraf",
-        allText: "Teks Lengkap",
+        allText: "Semua Teks",
         paraPrefix: "Paragraf ",
         paraSuffix: "",
         manualInput: "Input Manual",
         playAI: "Dengar AI",
         playMyRec: "Dengar Saya",
         compare: "Bandingkan",
-        feedback: "Umpan Balik",
-        excellent: "Luar biasa! Pelafalan Anda sangat akurat!",
-        good: "Bagus! Hanya sedikit yang perlu diperbaiki.",
-        keepTrying: "Teruslah mencoba! Dengarkan AI dan tiru nadanya.",
+        feedbackTitle: "👨‍🏫 Komentar Master",
+        excellent: "Sempurna! Seperti penutur asli! Nilai penuh dari Master!",
+        great: "Sangat standar! Nada jelas dan alami. Pertahankan!",
+        good: "Bagus! Sebagian besar benar, perhatikan nada.",
+        fair: "Bisa dimengerti, tapi perlu lebih tepat. Pelan-pelan dan tiru AI.",
+        keepTrying: "Master pikir kamu terburu-buru. Pelan-pelan, ucapkan setiap kata dengan jelas. Coba lagi!",
         noRec: "Belum ada rekaman",
         downloadRec: "Unduh",
-        comparePlay: "Putar Perbandingan",
-        aiWave: "Bentuk Gelombang AI",
-        myWave: "Bentuk Gelombang Saya",
-        waveHint: "Tampilan bentuk gelombang rekaman (oranye untuk Anda)"
+        comparePlay: "Bandingkan",
+        aiWave: "Gelombang AI",
+        myWave: "Gelombang Saya",
+        waveHint: "Tampilan gelombang rekaman (oranye untuk Anda)"
       }
     };
 
@@ -1034,8 +1040,10 @@
 
       const getFeedback = (score) => {
         if (score === null) return "";
-        if (score >= 90) return t.excellent;
-        if (score >= 70) return t.good;
+        if (score === 100) return t.excellent;
+        if (score >= 90) return t.great;
+        if (score >= 80) return t.good;
+        if (score >= 60) return t.fair;
         return t.keepTrying;
       };
 
@@ -1442,12 +1450,27 @@
 
                       {/* 評語區 */}
                       {accuracyScore !== null && (
-                        <div className="bg-white rounded-lg p-3 border border-slate-100 shadow-sm">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-xs font-bold text-teal-600">{t.feedback}</span>
-                            <span className="text-xs text-slate-400">{t.accuracy}: {accuracyScore}%</span>
+                        <div className={`rounded-lg p-4 border shadow-sm transition-all ${accuracyScore === 100 ? 'bg-gradient-to-r from-yellow-50 to-amber-100 border-amber-300' :
+                            accuracyScore >= 90 ? 'bg-green-50 border-green-200' :
+                              accuracyScore >= 80 ? 'bg-blue-50 border-blue-200' :
+                                accuracyScore >= 60 ? 'bg-yellow-50 border-yellow-200' :
+                                  'bg-red-50 border-red-200'
+                          }`}>
+                          <div className="flex justify-between items-center mb-2">
+                            <span className={`text-sm font-bold flex items-center gap-2 ${accuracyScore >= 80 ? 'text-slate-800' : 'text-slate-700'
+                              }`}>
+                              {t.feedbackTitle}
+                            </span>
+                            <span className={`text-xs font-bold px-2 py-1 rounded-full ${accuracyScore >= 90 ? 'bg-green-200 text-green-800' :
+                                accuracyScore >= 60 ? 'bg-yellow-200 text-yellow-800' :
+                                  'bg-red-200 text-red-800'
+                              }`}>
+                              {accuracyScore}%
+                            </span>
                           </div>
-                          <p className="text-sm text-slate-700">{getFeedback(accuracyScore)}</p>
+                          <p className="text-sm font-medium text-slate-700 leading-relaxed">
+                            {getFeedback(accuracyScore)}
+                          </p>
                         </div>
                       )}
 
