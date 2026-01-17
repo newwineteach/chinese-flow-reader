@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>華語流利讀 - Chinese Flow Reader</title>
+  <!-- 引入 Tailwind CSS (樣式) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 React 和 Babel (核心邏輯) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+    }
+
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- 圖示組件 ---
+    const IconWrapper = ({ children, size = 20, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        {children}
+      </svg>
+    );
+    const Play = (props) => <IconWrapper {...props}><polygon points="5 3 19 12 5 21 5 3"></polygon></IconWrapper>;
+    const Pause = (props) => <IconWrapper {...props}><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></IconWrapper>;
+    const RotateCcw = (props) => <IconWrapper {...props}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></IconWrapper>;
+    const Type = (props) => <IconWrapper {...props}><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></IconWrapper>;
+    const Volume2 = (props) => <IconWrapper {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></IconWrapper>;
+    const BookOpen = (props) => <IconWrapper {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></IconWrapper>;
+    const Settings = (props) => <IconWrapper {...props}><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></IconWrapper>;
+    const Mic = (props) => <IconWrapper {...props}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></IconWrapper>;
+    const MicOff = (props) => <IconWrapper {...props}><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></IconWrapper>;
+    const CheckCircle = (props) => <IconWrapper {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></IconWrapper>;
+    const AlertCircle = (props) => <IconWrapper {...props}><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></IconWrapper>;
+    const Globe = (props) => <IconWrapper {...props}><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></IconWrapper>;
+    const ChevronDown = (props) => <IconWrapper {...props}><polyline points="6 9 12 15 18 9"></polyline></IconWrapper>;
+    const Book = (props) => <IconWrapper {...props}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></IconWrapper>;
+    const AlertTriangle = (props) => <IconWrapper {...props}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></IconWrapper>;
+    const User = (props) => <IconWrapper {...props}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></IconWrapper>;
+    const Ear = (props) => <IconWrapper {...props}><path d="M6 8.5a6.5 6.5 0 1 1 13 0c0 6-6 6-6 10a3.5 3.5 0 1 1-7 0"></path><path d="M15 8.5a2.5 2.5 0 0 0-5 0v1a2 2 0 1 0 4 0v-1z"></path></IconWrapper>;
+
+    // --- 課文資料庫 (L1 - L10) ---
+    const textbookData = [
+      {
+        id: "L1",
+        title: "第一課 環島旅行",
+        paragraphs: [
+          "臺灣是一個島，四面環海，中間有高山。有自然的風景、有傳統的建築、有現代的高樓、也有多元的文化。面積不大，再加上交通便利，很適合安排環島旅行。有人開車，也有人騎機車，甚至騎自行車環島。不過，如果你是從國外來的旅客，建議你多利用公共交通工具，不但輕鬆，而且比較安全。",
+          "不想擔心停車和天氣問題的人，搭火車是最好的選擇。外國觀光客大部分會從臺北往東走，到了南部再北上，經過西部的幾個城市，最後回到臺北。這樣一趟環島旅行差不多需要七到十天左右，旅客可以按照自己的時間和興趣安排參觀的地點。",
+          "走這條路線可以先欣賞到東部海邊美麗的風景。在東北海岸，最吸引人的是各種奇岩怪石；在花蓮和臺東，除了自然美景，還可以認識臺灣的原住民文化。南部的墾丁更是受歡迎，不少人喜歡在這裡做水上活動，或是躺在沙灘上曬太陽，放鬆放鬆。在高雄、臺南和臺中，可以嚐嚐當地的美食；回到臺北，當然不能錯過幾個知名的景點：去故宮看古物、上貓空喝茶、逛夜市吃小吃等。另外，從象山看到的臺北市夜景也一定不會讓你失望。",
+          "環島旅行需要花比較多的精神和體力，但是這樣的方式能讓你更了解臺灣。如果你有機會到臺灣來，可以考慮坐火車環島一周，對你來說，應該會是一次很特別的經驗。"
+        ]
+      },
+      {
+        id: "L2",
+        title: "第二課 望子成龍望女成鳳",
+        paragraphs: [
+          "一般亞洲的父母都有「望子成龍、望女成鳳」的觀念，從孩子小的時候就對他們有很高的期望，希望他們好，還要更好。父母為了把孩子培養成優秀的人，不要讓孩子輸在起跑點，就安排他們進入英語、音樂補習班，或者參加各種比賽。有的父母，對孩子的要求很高，如果孩子的成績不理想，就批評孩子，甚至打罵孩子，所以很多孩子也就覺得自己不夠好，不能達到父母的要求，對自己沒有信心。",
+          "到了念大學的時候，孩子也常常為了選擇什麼科系而跟父母意見不合，有的父母希望孩子能選擇熱門的科系，將來容易找到工作，但是孩子希望按照自己的興趣選擇。如果沒有興趣，雖然勉強學習，也不會有好的效果，而且現代社會改變得很快，現在念的是熱門的科系，畢業後也不一定找得到很好的工作，只有念自己有興趣的科系，未來才可以有更好的表現。",
+          "這幾年，越來越多的年輕父母已經改變了他們的教育觀念。他們會尊重孩子的選擇，讓孩子自由發展。我們生活在一個多元的社會裡，孩子以後的發展不一定和成績有關係。父母應該幫孩子找到自己的興趣，把他們的興趣變成專業，多鼓勵孩子，不要只用成績來決定孩子的價值。人生還有很多發展的可能性，讓孩子在快樂的環境中成長吧！"
+        ]
+      },
+      {
+        id: "L3",
+        title: "第三課 不平安的平安夜",
+        paragraphs: [
+          "二○二二年的聖誕節，北美出現了四十年以來最強的一場暴風雪。這一場暴風雪，讓美國從東部到西部有三分之二的地區出現攝氏零度以下的低溫，連本來氣候溫暖的佛羅里達州、德州等，也出現下大雪的情形。不只是北美，歐洲同時也受到這個北極寒流的影響。",
+          "極低的氣溫，再加上強風與暴雪的影響，造成各地交通大亂，人們生活大受影響。暴風雪讓很多人一覺醒來發現汽車被雪埋住，沒辦法出門。道路上因為結了冰，或積雪太厚沒辦法剷除而造成嚴重塞車。更糟糕的是本來要搭飛機的旅客被困在機場。不只有美國，法國、德國也都出現了飛機班次被取消，停飛的情況。聖誕節對許多人來說，是一個重要的日子。住在外地的人，不管是工作或是求學，都希望在這一天回家跟家人團聚。被困在機場，和陌生人一起度過平安夜，恐怕成為許多人二○二年聖誕節的共同回憶。沒想到這個情形，在二○二三年的聖誕節再次發生。",
+          "目前地球氣候異常是受到聖嬰現象或反聖嬰現象的影響。這兩種現象讓氣候變成兩個極端，本來寒冷地區的氣溫變得更低，有些地區在雨季時出現豪雨。不過，有些地區應該寒冷的冬天卻變得比較溫暖了，有些地區因為沒下雨而出現乾旱。氣候異常除了給人們生活帶來不便，甚至對農業、食品安全、能源都會造成極大的影響。為了我們能平安地生活，人們必須積極解決這個問題。"
+        ]
+      },
+      {
+        id: "L4",
+        title: "第四課 平溪天燈節",
+        paragraphs: [
+          "「放天燈」是平溪傳統的習俗，每年在平溪舉辦的天燈節已成為臺灣北部重要的文化活動之一。傳說天燈是三國時代的諸葛亮（諸葛孔明）為了傳達消息、方便聯絡而發明的，所以天燈也叫做「孔明燈」。",
+          "關於平溪放天燈的傳統一般認為是從清朝開始的。當時平溪常有強盜出現，不太平靜。只要強盜一來，不少村民會躲進山裡，等到強盜離開，留在村子裡的人就放天燈，讓在山上的村民們知道危險過去了，可以放心回家。現在，放天燈已經不是為了報平安，而是用來許願或者表達祝福的意思。",
+          "每年元宵節前後，平溪都會吸引成千上萬的遊客來這裡放天燈，慢慢發展成「天燈節」。放天燈前先在上面寫下自己的願望，比方說：平安健康、心想事成、學業進步、工作順利等等；看著天燈慢慢上升，希望夢想可以實現。除了元宵節，情侶們還會在情人節或者七夕到平溪放天燈，享受浪漫的氣氛，因此，放天燈是許多觀光客非常喜愛的活動。",
+          "放天燈時當然也得考慮安全問題。平溪因為四面環山，天燈飛不遠，加上山區常下雨，比較溼，燒完的天燈掉下來也不容易引起火災，所以算是很適合放天燈的環境。不過，每年天燈節之後產生的大量「天燈垃圾」可能會給環境帶來嚴重的汙染；雖然新北市政府鼓勵回收天燈再利用，希望減少垃圾，不少居民還是反對舉辦天燈節。"
+        ]
+      },
+      {
+        id: "L5",
+        title: "第五課 復古風",
+        paragraphs: [
+          "人們本來就喜歡追求新的事物，追求變化。新的事物會吸引人們的注意，如果能接受的人多，追隨的人多，這個新事物就會成為一種流行。拿服裝來說，每個季節都會出現新的設計，每個新產品、新款式都帶著跟前一季不同的特色。喜愛流行的年輕人立刻追隨當季的流行來打扮自己。「跟上流行」成為了一種趨勢，也成為許多年輕人的觀念。",
+          "一般來說，流行的服裝有時間性，當另一個新產品出現，曾經非常流行的就落伍了，消失在人們眼中。然而，並不是所有的流行服裝都會消失，某些帶著獨特設計與社會文化的產品，就算經過一段長時間，也能再一次受到大眾注意。這種回到上個世代流行的現象就是「復古」。復古並不是直接拿出二手的舊衣物，而是使用過去經典的風格重新設計出新的產品。近年來，融合了過去風格的新產品，不但有創意，也有懷念舊風格之情感，因此形成了一股復古風潮。上世紀七○年代很流行的喇叭褲就是一個例子。復古風不只出現在時裝界、音樂界，甚至餐廳、咖啡店也開始追求復古風格。",
+          "時裝界的代表人物香奈兒女士說過一句話：「流行終會消退，只有風格永存。(La mode se démode, le style jamais.)」這句話表示只有經典的、獨特的事物，才能永遠保存下來。目前復古風懷念的風格往往就是那些流行過，因為經典而被保存下來的。尋找適合自己的風格，不盲目追隨流行，也是一種永續的觀念。"
+        ]
+      },
+      {
+        id: "L6",
+        title: "第六課 地產地消",
+        paragraphs: [
+          "由於現代交通便利和全球貿易的關係，大量的食物進口，現代人已經分不清楚什麼是當季當地的蔬果了，在大賣場或超級市場，不論是日本的哈密瓜、葡萄，美國的櫻桃、藍莓都可以買得到。這些不是產地和產季的蔬果，雖然滿足了一些人的口腹之欲，但是這些進口水果經過長途運送，浪費資源，製造污染，對環境有很大的影響。此外，臺灣土地面積小，出產量少，怎麼跟農業生產成本低的外國進口蔬果競爭，也是現在臺灣小農面臨的嚴重問題。",
+          "因此，有一些有環保觀念，關心臺灣農業的人，提出「地產地消」的概念，這本來是從英國的「食物里程」概念和「社區型農業」結合起來的作法，在當地生產，在當地銷售，在當地消費。臺灣土地面積小，在國內各地生產的農產品都能在一天內運送到，所以臺灣本地生產的蔬果都可以算是「地產地消」範圍，因此「地產地消」不但保護環境，也是臺灣面臨全球化貿易衝擊的解決辦法。",
+          "食物從產地到餐桌的路程越透明，消費者就吃得越安心。食物長途運送必須使用運送的工具，像船、飛機、火車，在運送過程中保存食物也會用到能源，產生二氧化碳，造成溫室效應。所以，吃當地的食物不但新鮮、安全，也減少食物里程對環境的影響，又能支持當地農業，好處很多，就讓我們從認識「每天吃的食物從哪裡來」開始吧！"
+        ]
+      },
+      {
+        id: "L7",
+        title: "第七課 工作態度與你的未來",
+        paragraphs: [
+          "聽到洛克菲勒這個名字，多數人想到的不是「石油大王」，就是「億萬富豪」。實際上，他不只是一名成功的企業家，也是一位重視家庭教育的父親。在《寫給兒子的三十八封信》中，他對兒子提出學習、道德、事業、生活等各方面的意見，透過這本書可以看出他的經營觀念以及人生智慧。",
+          "在一封信裡面洛克菲勒對兒子這樣說：「如果你把工作當作一種樂趣，人生就是天堂；如果你把工作當作一種義務，人生就是地獄。」這段話雖然有些主觀，卻十分有道理。從學校畢業進入社會之後，工作時間差不多佔了每天的三分之一，做什麼工作雖然重要，但怎麼做工作對一個人來說影響更大。不管做什麼樣的工作都應該有正確的工作態度，可以說態度決定一個人的價值。",
+          "很多人認為工作最大的目的是賺錢，年輕人心中最理想的工作條件也是：錢多、事少、離家近。然而，洛克菲勒的想法不同。在他看來，收入只不過是工作的副產品而已，只要努力工作，就可以累積財富，但那並不是最重要的。他認為工作是成就偉大事業的基礎，也是實現自我的機會。我們應該對工作保持熱情，把職場當作發揮的舞臺，盡可能表現自己，並且相信這份工作對社會有貢獻。",
+          "試著愛上工作吧！在工作中發現生活的意義，透過每一天的工作享受生活，你就會覺得自己如在天堂。"
+        ]
+      },
+      {
+        id: "L8",
+        title: "第八課 壯遊-成長之旅",
+        paragraphs: [
+          "壯遊(Grand Tour)原本是十七、十八世紀在歐洲貴族和富有階層的青年之間流行的一種活動。他們認為透過旅程中的環境改變與各種新鮮體驗帶來的刺激，不只對心理發展有很大的幫助，更能夠打開視野，增加對世界的認識，讓一個人更成熟。到了現代，壯遊成為西方青年的傳統。他們多半會在確定學校之後與開學前，或者畢業之後與工作前的這段時間進行一次長期與長途的旅行。對於他們而言，壯遊是走向成年的過程。",
+          "隨著交通與資訊的發達，壯遊已不再是有錢人的活動，也沒有年齡的限制。一般認為壯遊有：旅遊時間「長」、行程挑戰性「高」、與當地社會互動「深」這三項特質。所以大部分壯遊者會拜訪陌生的國家，學習新的語言和技能，挑戰自我，提高行程難度。同時，在長時間的旅行中體驗當地生活，吸收不同文化、社會、藝術以及思想的養分，豐富知識，使自己成長。",
+          "不過，在計畫壯遊時提醒你注意下面幾件事：一、進行的方式與內容要適合自己，不要為了挑戰而挑戰，否則無法享受壯遊的樂趣。二、考慮理想和實際情況，把一趟壯遊分幾個部分來安排。三、做好心理準備，就算發生非計畫中的意外，也能接受。",
+          "壯遊的難度不必與別人做比較，壯遊的目的也不是為了達到某人的標準或記錄。今日的競爭對手是昨日的自己，只要比昨天進步、成長，就是一次獨一無二的壯遊。"
+        ]
+      },
+      {
+        id: "L9",
+        title: "第九課 哀悼科技",
+        paragraphs: [
+          "跟已經過世的家人「對話」，是電影或科幻小說常出現的一種題材。其實這樣的情景不只存在戲劇之中，隨著科技的進步，這件事也正在慢慢成為真實的。",
+          "家人在許多人心目中是最重要的，因此面對生離死別時，心中總會特別難過、疼痛，無法忘記。如今，有企業發展出「哀悼科技」。哀悼科技是指利用大數據記錄，再利用人工智慧技術產生出虛擬的過世者，來與親人互動。",
+          "過去就有把家人的照片使用電腦軟體製作成動畫的技術，現在有公司能在家人過世前就利用AI技術記錄他的聲音和影像，過世之後，讓親人還可以看到他之前的模樣。即使家人已不在人世，親人也不需過度悲傷，能夠和虛擬家人交談，聊聊過去的記憶，好像他們還在身邊。",
+          "哀悼科技慢慢地受到大家注意後，有些人覺得很神奇，認為是一個溫暖的科技，能夠安慰難過的親人，但也有些人覺得這麼做根本沒必要，只要把過世的人放在心中懷念就好了。",
+          "死亡幾乎是人類最害怕的一件事，只要是人，總有一天會離開人世。過去我們說「人死不能復生」，現在利用 AI 科技卻能讓人用另一種面貌復活。如果未來科技能把自己親人的記憶複製到一個AI機器人身上，儘管科技能夠做得非常真实，但你愛的「他」，還是那個「他」嗎？"
+        ]
+      },
+      {
+        id: "L10",
+        title: "第十課 裁員潮",
+        paragraphs: [
+          "美國科技業自二○二二年下半年開始大規模的裁員潮，許多科技業包括推特(Twitter)、Meta、亞馬遜(Amazon)等知名大型科技業都大量裁員，到今年，估計裁員人數超過二十四萬。比去年高出百分之五十，在進入年底，還有增加的趨勢。",
+          "這些科技巨頭最近裁員不斷，引起外界關注，有專家指出矽谷(Silicon Valley)近期的裁員潮是跟科技公司長期存在的「假工作(fake work)」文化有關，「假工作」指的是員工在完成一項專案後，讓員工做自己有興趣的專案，一方面可以刺激出新的創意，一方面可以保留多餘的人力，以後請新員工時，就不需要再花培訓的成本。但這種作法同時也造成人力過多，因此在裁員時，這些多餘的人力就首當其衝被裁了。",
+          "但是以全國整體的裁員人數來說，其實並不算多，這次的裁員潮不代表所有行業都有裁員的趨勢，引起關注主要是因為媒體都常常報導這些知名的公司。跟科技業的大量裁員比起來，其他美國產業，對藍領的需求反而很高，許多工廠到現在還是缺工，另外像卡車司機，餐廳服務員等，都還有很大的就業空間。我們不能只用裁員人數來看美國經濟，應該仔細看個別產業的就業情形。",
+          "但科技業常被看做是美國經濟的火車頭，在新冠疫情後有這樣的大動作，讓許多人都感到震驚。科技業「大規模裁員」的情況，對就業者而言，當然會有挫折感，不但讓新進社會的畢業生對職場失望，更使許多科技人才被埋沒。"
+        ]
+      }
+    ];
+
+    // 多語言字典
+    const translations = {
+      zh: {
+        title: "華語流利讀",
+        subtitle: "智慧斷詞・導讀配速・口說評測",
+        visualPacing: "視覺導讀",
+        speechRecog: "語音辨識",
+        inputLabel: "課文選擇與輸入",
+        clear: "清空",
+        placeholder: "請選擇課文，或在此貼上文字...",
+        settings: "閱讀設定",
+        rate: "導讀語速",
+        voice: "選擇語音",
+        defaultVoice: "預設語音",
+        size: "字體大小",
+        blockMode: "區塊模式",
+        textMode: "文本模式",
+        play: "播放導讀",
+        pause: "暫停導讀",
+        record: "口說練習",
+        stopRecord: "停止錄音",
+        recording: "正在聆聽...",
+        reading: "正在導讀...",
+        ready: "準備就緒",
+        accuracy: "準確度",
+        clickHint: "點擊單詞可聽發音",
+        yourSpeech: "您剛才說的是：",
+        listening: "正在聆聽您的發音...",
+        browserHint: "提示：Google Sites 嵌入模式可能無法使用麥克風。",
+        resetTitle: "重置所有狀態",
+        emptyHint: "請在左側選擇課文或輸入文字...",
+        selectLesson: "選擇課文",
+        selectPara: "選擇段落",
+        allText: "全部課文",
+        paraPrefix: "第",
+        paraSuffix: "段",
+        manualInput: "自訂輸入",
+        playAI: "聽 AI 發音",
+        playMyRec: "聽我的錄音",
+        compare: "聽聽差別",
+        feedback: "評語",
+        excellent: "太棒了！您的發音非常準確！",
+        good: "很不錯！只有少數地方需要加強。",
+        keepTrying: "繼續加油！多聽幾次 AI 發音，模仿語調。",
+        noRec: "尚未錄音",
+        downloadRec: "下載錄音",
+        comparePlay: "對比播放",
+        aiWave: "AI 發音波形",
+        myWave: "我的發音波形",
+        waveHint: "錄音波形顯示（橘色為您的發音）"
+      },
+      en: {
+        title: "Chinese Flow Reader",
+        subtitle: "Smart Segmentation • Pacing • Pronunciation Check",
+        visualPacing: "Visual Pacing",
+        speechRecog: "Speech Recog",
+        inputLabel: "Select Lesson / Input",
+        clear: "Clear",
+        placeholder: "Select a lesson or paste text here...",
+        settings: "Settings",
+        rate: "Speed",
+        voice: "Voice",
+        defaultVoice: "Default",
+        size: "Font Size",
+        blockMode: "Block Mode",
+        textMode: "Text Mode",
+        play: "Read Aloud",
+        pause: "Pause",
+        record: "Practice",
+        stopRecord: "Stop",
+        recording: "Listening...",
+        reading: "Reading...",
+        ready: "Ready",
+        accuracy: "Accuracy",
+        clickHint: "Click words to listen",
+        yourSpeech: "You said:",
+        listening: "Listening to your pronunciation...",
+        browserHint: "Note: Mic access is often blocked in Google Sites embeds.",
+        resetTitle: "Reset all",
+        emptyHint: "Please select a lesson on the left...",
+        selectLesson: "Select Lesson",
+        selectPara: "Select Paragraph",
+        allText: "Full Text",
+        paraPrefix: "Para ",
+        paraSuffix: "",
+        manualInput: "Manual Input",
+        playAI: "Hear AI",
+        playMyRec: "Hear Me",
+        compare: "Compare",
+        feedback: "Feedback",
+        excellent: "Excellent! Your pronunciation is very accurate!",
+        good: "Good job! Just a few spots to polish.",
+        keepTrying: "Keep trying! Listen to the AI and mimic the tone.",
+        noRec: "No Recording",
+        downloadRec: "Download",
+        comparePlay: "Compare Play",
+        aiWave: "AI Waveform",
+        myWave: "My Waveform",
+        waveHint: "Recording waveform display (orange for yours)"
+      },
+      id: {
+        title: "Chinese Flow Reader",
+        subtitle: "Segmentasi Cerdas • Kecepatan • Cek Pelafalan",
+        visualPacing: "Visual Pacing",
+        speechRecog: "Pengenalan Suara",
+        inputLabel: "Pilih Pelajaran / Input",
+        clear: "Hapus",
+        placeholder: "Pilih pelajaran atau tempel teks di sini...",
+        settings: "Pengaturan",
+        rate: "Kecepatan",
+        voice: "Suara",
+        defaultVoice: "Default",
+        size: "Ukuran Teks",
+        blockMode: "Mode Blok",
+        textMode: "Mode Teks",
+        play: "Baca Keras",
+        pause: "Jeda",
+        record: "Latihan",
+        stopRecord: "Berhenti",
+        recording: "Mendengarkan...",
+        reading: "Membaca...",
+        ready: "Siap",
+        accuracy: "Akurasi",
+        clickHint: "Klik kata untuk mendengarkan",
+        yourSpeech: "Anda mengatakan:",
+        listening: "Mendengarkan pelafalan Anda...",
+        browserHint: "Catatan: Mic mungkin diblokir di Google Sites.",
+        resetTitle: "Reset semua",
+        emptyHint: "Silakan pilih pelajaran di sebelah kiri...",
+        selectLesson: "Pilih Pelajaran",
+        selectPara: "Pilih Paragraf",
+        allText: "Teks Lengkap",
+        paraPrefix: "Paragraf ",
+        paraSuffix: "",
+        manualInput: "Input Manual",
+        playAI: "Dengar AI",
+        playMyRec: "Dengar Saya",
+        compare: "Bandingkan",
+        feedback: "Umpan Balik",
+        excellent: "Luar biasa! Pelafalan Anda sangat akurat!",
+        good: "Bagus! Hanya sedikit yang perlu diperbaiki.",
+        keepTrying: "Teruslah mencoba! Dengarkan AI dan tiru nadanya.",
+        noRec: "Belum ada rekaman",
+        downloadRec: "Unduh",
+        comparePlay: "Putar Perbandingan",
+        aiWave: "Bentuk Gelombang AI",
+        myWave: "Bentuk Gelombang Saya",
+        waveHint: "Tampilan bentuk gelombang rekaman (oranye untuk Anda)"
+      }
+    };
+
+    const ChineseFlowReader = () => {
+      const [uiLang, setUiLang] = useState('zh');
+      const t = translations[uiLang];
+
+      const [inputText, setInputText] = useState("");
+      const [selectedLesson, setSelectedLesson] = useState("");
+      const [selectedPara, setSelectedPara] = useState("all");
+
+      const [segments, setSegments] = useState([]);
+      const [isPlaying, setIsPlaying] = useState(false);
+      const [speechRate, setSpeechRate] = useState(0.9);
+      const [viewMode, setViewMode] = useState('block');
+      const [fontSize, setFontSize] = useState(20);
+      const [pitch, setPitch] = useState(1);
+      const [selectedWord, setSelectedWord] = useState(null);
+
+      const [highlightIndex, setHighlightIndex] = useState(-1);
+      const [isRecording, setIsRecording] = useState(false);
+      const [spokenText, setSpokenText] = useState("");
+      const [accuracyScore, setAccuracyScore] = useState(null);
+      const [matchResult, setMatchResult] = useState([]);
+      const [isIframe, setIsIframe] = useState(false);
+
+      const [voices, setVoices] = useState([]);
+      const [selectedVoiceURI, setSelectedVoiceURI] = useState("");
+
+      // 新增：錄音相關狀態
+      const [mediaRecorder, setMediaRecorder] = useState(null);
+      const [audioChunks, setAudioChunks] = useState([]);
+      const [audioURL, setAudioURL] = useState(null);
+      const [isPlayingUserAudio, setIsPlayingUserAudio] = useState(false);
+      const userAudioRef = useRef(null);
+
+      // 新增：波形可視化
+      const canvasRef = useRef(null);
+      const aiCanvasRef = useRef(null); // AI 波形畫布
+      const [audioContext, setAudioContext] = useState(null);
+      const [userWaveformData, setUserWaveformData] = useState(null);
+      const [aiWaveformData, setAiWaveformData] = useState(null); // AI 波形數據
+      const [isComparePlaying, setIsComparePlaying] = useState(false);
+
+      const synthRef = useRef(window.speechSynthesis);
+      const utteranceRef = useRef(null);
+      const recognitionRef = useRef(null);
+
+      useEffect(() => {
+        handleLessonChange("L1");
+        try { if (window.self !== window.top) setIsIframe(true); } catch (e) { setIsIframe(true); }
+
+        const loadVoices = () => {
+          const allVoices = synthRef.current.getVoices();
+          const zhVoices = allVoices.filter(v => v.lang.includes('zh'));
+          setVoices(zhVoices);
+          const bestVoice = zhVoices.find(v => v.name.includes('Google') && v.lang.includes('TW'))
+            || zhVoices.find(v => v.lang.includes('TW'))
+            || zhVoices[0];
+          if (bestVoice) setSelectedVoiceURI(bestVoice.voiceURI);
+        };
+
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+          speechSynthesis.onvoiceschanged = loadVoices;
+        }
+      }, []);
+
+      // 監聽使用者音訊播放結束
+      useEffect(() => {
+        if (userAudioRef.current) {
+          userAudioRef.current.onended = () => setIsPlayingUserAudio(false);
+        }
+      }, [audioURL]);
+
+      const handleLessonChange = (lessonId) => {
+        setSelectedLesson(lessonId);
+        setSelectedPara("all");
+        if (lessonId === "") { setInputText(""); return; }
+        const lesson = textbookData.find(l => l.id === lessonId);
+        if (lesson) setInputText(lesson.paragraphs.join("\n\n"));
+      };
+
+      const handleParaChange = (paraIndex) => {
+        setSelectedPara(paraIndex);
+        const lesson = textbookData.find(l => l.id === selectedLesson);
+        if (!lesson) return;
+        if (paraIndex === "all") setInputText(lesson.paragraphs.join("\n\n"));
+        else {
+          const idx = parseInt(paraIndex);
+          if (!isNaN(idx) && lesson.paragraphs[idx]) setInputText(lesson.paragraphs[idx]);
+        }
+      };
+
+      useEffect(() => {
+        if (!inputText) { setSegments([]); return; }
+        try {
+          const segmenter = new Intl.Segmenter('zh-TW', { granularity: 'word' });
+          const iterator = segmenter.segment(inputText);
+          const results = Array.from(iterator).map(item => ({ word: item.segment, index: item.index, isWordLike: item.isWordLike }));
+          setSegments(results);
+        } catch (error) {
+          setSegments(inputText.split('').map((char, idx) => ({ word: char, index: idx, isWordLike: true })));
+        }
+      }, [inputText]);
+
+      useEffect(() => {
+        const handleEnd = () => { setIsPlaying(false); setHighlightIndex(-1); };
+        const interval = setInterval(() => { if (!synthRef.current.speaking && isPlaying) handleEnd(); }, 500);
+        return () => clearInterval(interval);
+      }, [isPlaying]);
+
+      const handlePlayPause = () => {
+        // 如果正在播放使用者錄音，先停止
+        if (isPlayingUserAudio && userAudioRef.current) {
+          userAudioRef.current.pause();
+          userAudioRef.current.currentTime = 0;
+          setIsPlayingUserAudio(false);
+        }
+
+        if (isPlaying) {
+          synthRef.current.cancel();
+          setIsPlaying(false);
+          setHighlightIndex(-1);
+        } else {
+          if (!inputText) return;
+
+          const utterance = new SpeechSynthesisUtterance(inputText);
+          utterance.lang = 'zh-TW';
+          utterance.rate = speechRate;
+          utterance.pitch = pitch;
+
+          if (selectedVoiceURI) {
+            const voice = voices.find(v => v.voiceURI === selectedVoiceURI);
+            if (voice) utterance.voice = voice;
+          }
+
+          utterance.onboundary = (event) => {
+            const charIndex = event.charIndex;
+            const foundIdx = segments.findIndex((seg, idx) => {
+              const nextSeg = segments[idx + 1];
+              return seg.index <= charIndex && (!nextSeg || nextSeg.index > charIndex);
+            });
+            if (foundIdx !== -1) setHighlightIndex(foundIdx);
+          };
+
+          utterance.onend = () => { setIsPlaying(false); setHighlightIndex(-1); };
+          utterance.onerror = () => { setIsPlaying(false); setHighlightIndex(-1); };
+
+          utteranceRef.current = utterance;
+          synthRef.current.speak(utterance);
+          setIsPlaying(true);
+        }
+      };
+
+      const speakWord = (word) => {
+        if (synthRef.current.speaking) {
+          synthRef.current.cancel();
+          setIsPlaying(false);
+          setHighlightIndex(-1);
+        }
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'zh-TW';
+        utterance.rate = speechRate;
+        if (selectedVoiceURI) {
+          const voice = voices.find(v => v.voiceURI === selectedVoiceURI);
+          if (voice) utterance.voice = voice;
+        }
+        synthRef.current.speak(utterance);
+        setSelectedWord(word);
+      };
+
+      const handleReset = () => {
+        synthRef.current.cancel();
+        setIsPlaying(false);
+        setHighlightIndex(-1);
+        if (userAudioRef.current) {
+          userAudioRef.current.pause();
+          setIsPlayingUserAudio(false);
+        }
+
+        if (selectedLesson) handleParaChange(selectedPara);
+        else setInputText("");
+        setSpokenText("");
+        setAccuracyScore(null);
+        setMatchResult([]);
+        setAudioURL(null); // 清除錄音
+        setAudioChunks([]);
+      };
+
+      const handleClear = () => {
+        synthRef.current.cancel();
+        setIsPlaying(false);
+        setHighlightIndex(-1);
+        setInputText("");
+        setSelectedLesson("");
+        setSpokenText("");
+        setAccuracyScore(null);
+        setMatchResult([]);
+        setAudioURL(null);
+        setAudioChunks([]);
+      };
+
+      const toggleRecording = () => {
+        if (isRecording) stopRecording();
+        else startRecording();
+      };
+
+      // 播放使用者錄音
+      const playUserAudio = () => {
+        if (!audioURL) return;
+        if (isPlaying) { // 如果 AI 正在讀，先停掉
+          synthRef.current.cancel();
+          setIsPlaying(false);
+          setHighlightIndex(-1);
+        }
+
+        if (isPlayingUserAudio) {
+          userAudioRef.current.pause();
+          setIsPlayingUserAudio(false);
+        } else {
+          userAudioRef.current.play();
+          setIsPlayingUserAudio(true);
+        }
+      };
+
+      const startRecording = async () => {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+          alert("您的瀏覽器不支援語音辨識 (Browser not supported)。建議使用 Chrome (桌機版) 或 Edge。\n\n如果您是直接開啟 HTML 檔案，部分瀏覽器可能會因安全性限制而無法使用麥克風。");
+          return;
+        }
+
+        // 停止之前的播放
+        if (isPlaying) {
+          synthRef.current.cancel();
+          setIsPlaying(false);
+        }
+        if (isPlayingUserAudio) {
+          userAudioRef.current.pause();
+          setIsPlayingUserAudio(false);
+        }
+
+        setAudioChunks([]); // 重置錄音片段
+        setAudioURL(null);
+
+        // 啟動錄音機 (MediaRecorder) 用於回放
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const mediaRecorder = new MediaRecorder(stream);
+          setMediaRecorder(mediaRecorder);
+
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              setAudioChunks((prev) => [...prev, event.data]);
+            }
+          };
+
+          mediaRecorder.onstop = () => {
+            // 錄音結束，生成音訊 blob
+            // 這裡我們需要依賴 state 中的 chunks，但由於閉包問題，在 onstop 這裡可能拿不到最新的 chunks
+            // 所以我們改用 ref 或者在 stopRecording 時處理 blob 生成
+          };
+
+          mediaRecorder.start();
+        } catch (err) {
+          console.error("Mic access error for MediaRecorder:", err);
+          // 繼續嘗試語音辨識，即使錄音回放失敗
+        }
+
+        // 啟動語音辨識 (SpeechRecognition) 用於評分
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.lang = 'zh-TW';
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+
+        recognitionRef.current.onstart = () => {
+          setIsRecording(true);
+          setSpokenText("");
+          setMatchResult([]);
+          setAccuracyScore(null);
+        };
+
+        recognitionRef.current.onresult = (event) => {
+          let finalTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+          }
+          const currentTranscript = Array.from(event.results).map(result => result[0].transcript).join('');
+          setSpokenText(currentTranscript);
+        };
+
+        recognitionRef.current.onerror = (event) => {
+          console.error("Speech recognition error", event.error);
+          setIsRecording(false);
+          if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+
+          let msg = "";
+          if (event.error === 'not-allowed') {
+            msg = isIframe
+              ? "無法存取麥克風。\n\n原因：Google Sites 的嵌入模式通常會封鎖麥克風權限。\n\n解決方法：請點擊下方的按鈕在新視窗開啟，或下載檔案使用。"
+              : "無法存取麥克風，請檢查瀏覽器權限設定。";
+          } else if (event.error === 'network') {
+            msg = "網路連線問題，語音辨識需要網路連線。";
+          } else if (event.error === 'no-speech') {
+            return;
+          } else {
+            msg = `語音辨識發生錯誤 (Error): ${event.error}`;
+          }
+          if (msg) alert(msg);
+        };
+
+        recognitionRef.current.onend = () => {
+          setIsRecording(false);
+          if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+          analyzeAccuracy();
+        };
+
+        try { recognitionRef.current.start(); } catch (e) { console.error(e); alert("啟動失敗。若您在 Google Sites 中，可能是權限被封鎖。"); }
+      };
+
+      const stopRecording = () => {
+        if (recognitionRef.current) recognitionRef.current.stop();
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+          // 在這裡處理 Blob 生成，確保獲取所有數據
+          // 由於 React state 更新是非同步的，這裡做一個簡單的延遲或者依賴 useEffect 來處理
+          // 為了簡化，我們在 useEffect 監聽 audioChunks 變化，或者直接依賴事件
+        }
+      };
+
+      // 監聽 audioChunks 變化並生成 URL (當錄音停止後)
+      useEffect(() => {
+        if (!isRecording && audioChunks.length > 0) {
+          const blob = new Blob(audioChunks, { type: 'audio/webm' });
+          const url = URL.createObjectURL(blob);
+          setAudioURL(url);
+
+          // 顯示成功提示
+          setSpokenText('✅ 錄音已保存！請使用下方按鈕比對發音');
+
+          // 生成使用者波形數據
+          generateWaveform(blob, false);
+
+          // 生成 AI 波形數據以便比對
+          generateAIWaveform();
+        }
+      }, [isRecording, audioChunks]);
+
+      // 生成 AI 語音波形（使用 Web Speech API 合成音頻）
+      const generateAIWaveform = async () => {
+        if (!inputText) return;
+
+        try {
+          // 由於 Web Speech API 無法直接獲取音頻數據
+          // 我們創建一個模擬的波形數據，基於文本長度
+          const textLength = inputText.length;
+          const samples = 200;
+          const simulatedData = [];
+
+          // 生成一個基於文本特徵的模擬波形
+          for (let i = 0; i < samples; i++) {
+            const charIndex = Math.floor((i / samples) * textLength);
+            const char = inputText[charIndex] || '';
+
+            // 根據字符類型生成不同的波形高度
+            let amplitude;
+            if (/[。！？]/.test(char)) {
+              amplitude = 0.3; // 標點符號處較低
+            } else if (/[，、；：]/.test(char)) {
+              amplitude = 0.4;
+            } else {
+              // 基於字符的 Unicode 值生成波形
+              const charCode = char.charCodeAt(0);
+              amplitude = 0.5 + (Math.sin(charCode / 100) * 0.3);
+            }
+
+            // 添加一些隨機變化使波形更自然
+            amplitude += (Math.random() - 0.5) * 0.1;
+            simulatedData.push(Math.max(0.2, Math.min(1, amplitude)));
+          }
+
+          setAiWaveformData(simulatedData);
+        } catch (err) {
+          console.error("AI 波形生成錯誤:", err);
+        }
+      };
+
+      // 生成波形數據
+      const generateWaveform = async (audioBlob, isAI = false) => {
+        try {
+          const arrayBuffer = await audioBlob.arrayBuffer();
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+
+          const rawData = audioBuffer.getChannelData(0);
+          const samples = 200; // 取樣點數
+          const blockSize = Math.floor(rawData.length / samples);
+          const filteredData = [];
+
+          for (let i = 0; i < samples; i++) {
+            let blockStart = blockSize * i;
+            let sum = 0;
+            for (let j = 0; j < blockSize; j++) {
+              sum += Math.abs(rawData[blockStart + j]);
+            }
+            filteredData.push(sum / blockSize);
+          }
+
+          const multiplier = Math.pow(Math.max(...filteredData), -1);
+          const normalizedData = filteredData.map(n => n * multiplier);
+
+          setUserWaveformData(normalizedData);
+          setAudioContext(ctx);
+        } catch (err) {
+          console.error("波形生成錯誤:", err);
+        }
+      };
+
+      // 繪製波形
+      const drawWaveform = () => {
+        if (!canvasRef.current || !userWaveformData) return;
+
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // 清空畫布
+        ctx.clearRect(0, 0, width, height);
+
+        // 繪製背景
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, width, height);
+
+        // 繪製中線
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, height / 2);
+        ctx.lineTo(width, height / 2);
+        ctx.stroke();
+
+        // 繪製波形
+        const sliceWidth = width / userWaveformData.length;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#f97316'; // 橘色
+        ctx.fillStyle = 'rgba(249, 115, 22, 0.2)';
+
+        ctx.beginPath();
+        ctx.moveTo(0, height / 2);
+
+        for (let i = 0; i < userWaveformData.length; i++) {
+          const x = sliceWidth * i;
+          const y = (height / 2) - (userWaveformData[i] * height / 2);
+
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+
+        ctx.stroke();
+
+        // 填充波形下方
+        ctx.lineTo(width, height / 2);
+        ctx.lineTo(0, height / 2);
+        ctx.closePath();
+        ctx.fill();
+      };
+
+      // 監聽波形數據變化，自動繪製
+      useEffect(() => {
+        if (userWaveformData) {
+          drawWaveform();
+        }
+      }, [userWaveformData]);
+
+      // 監聽AI波形數據變化，自動繪製
+      useEffect(() => {
+        if (aiWaveformData) {
+          drawAIWaveform();
+        }
+      }, [aiWaveformData]);
+
+      // 繪製AI波形
+      const drawAIWaveform = () => {
+        if (!aiCanvasRef.current || !aiWaveformData) return;
+
+        const canvas = aiCanvasRef.current;
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // 清空畫布
+        ctx.clearRect(0, 0, width, height);
+
+        // 繪製背景
+        ctx.fillStyle = '#f0fdf4';
+        ctx.fillRect(0, 0, width, height);
+
+        // 繪製中線
+        ctx.strokeStyle = '#bbf7d0';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, height / 2);
+        ctx.lineTo(width, height / 2);
+        ctx.stroke();
+
+        // 繪製波形
+        const sliceWidth = width / aiWaveformData.length;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#16a34a'; // 綠色代表AI
+        ctx.fillStyle = 'rgba(22, 163, 74, 0.15)';
+
+        ctx.beginPath();
+        ctx.moveTo(0, height / 2);
+
+        for (let i = 0; i < aiWaveformData.length; i++) {
+          const x = sliceWidth * i;
+          const y = (height / 2) - (aiWaveformData[i] * height / 2);
+
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+
+        ctx.stroke();
+
+        // 填充波形下方
+        ctx.lineTo(width, height / 2);
+        ctx.lineTo(0, height / 2);
+        ctx.closePath();
+        ctx.fill();
+      };
+
+      // 下載錄音
+      const downloadRecording = () => {
+        if (!audioURL) return;
+
+        const a = document.createElement('a');
+        a.href = audioURL;
+        a.download = `錄音_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      };
+
+      // 對比播放：先播 AI，再播錄音，帶有明確提示
+      const comparePlay = async () => {
+        if (!audioURL || !inputText) {
+          alert('請先完成錄音!');
+          return;
+        }
+
+        setIsComparePlaying(true);
+        setSpokenText('🎧 正在播放 AI 標準發音...');
+
+        // 先播放 AI
+        await new Promise((resolve) => {
+          const utterance = new SpeechSynthesisUtterance(inputText);
+          utterance.lang = 'zh-TW';
+          utterance.rate = speechRate;
+          utterance.pitch = pitch;
+
+          if (selectedVoiceURI) {
+            const voice = voices.find(v => v.voiceURI === selectedVoiceURI);
+            if (voice) utterance.voice = voice;
+          }
+
+          utterance.onend = resolve;
+          utterance.onerror = resolve;
+
+          synthRef.current.speak(utterance);
+        });
+
+        // 等待 1 秒，顯示過渡提示
+        setSpokenText('⏳ 接下來播放您的錄音...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // 播放使用者錄音
+        setSpokenText('🎤 正在播放您的錄音...');
+        if (userAudioRef.current) {
+          userAudioRef.current.play();
+          userAudioRef.current.onended = () => {
+            setIsComparePlaying(false);
+            setSpokenText('✅ 對比播放完成！聽出差異了嗎？');
+            // 3秒後恢復原本的辨識文字
+            setTimeout(() => {
+              analyzeAccuracy();
+            }, 3000);
+          };
+        } else {
+          setIsComparePlaying(false);
+          setSpokenText('❌ 錄音檔案無法播放，請重新錄音');
+        }
+      };
+
+      const analyzeAccuracy = () => {
+        if (!spokenText || segments.length === 0) return;
+        const cleanSpoken = spokenText.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
+        let matchedCount = 0;
+        let totalSignificantWords = 0;
+        const analysis = segments.map(seg => {
+          if (!seg.isWordLike) return { ...seg, status: 'neutral' };
+          totalSignificantWords++;
+          const isMatch = cleanSpoken.includes(seg.word);
+          if (isMatch) matchedCount++;
+          return { ...seg, status: isMatch ? 'correct' : 'missed' };
+        });
+        setMatchResult(analysis);
+        const score = totalSignificantWords > 0 ? Math.round((matchedCount / totalSignificantWords) * 100) : 0;
+        setAccuracyScore(score);
+      };
+
+      const getFeedback = (score) => {
+        if (score === null) return "";
+        if (score >= 90) return t.excellent;
+        if (score >= 70) return t.good;
+        return t.keepTrying;
+      };
+
+      const displaySegments = matchResult.length > 0 ? matchResult : segments;
+
+      return (
+        <div className="min-h-screen bg-slate-50 p-2 md:p-6 font-sans text-slate-800">
+          <div className="max-w-6xl mx-auto space-y-4">
+
+            {/* Header */}
+            <header className="flex flex-col md:flex-row md:items-center justify-between pb-3 border-b border-slate-200 gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-teal-600 rounded-lg shadow-lg">
+                  <BookOpen className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-slate-800">{t.title}</h1>
+                  <p className="text-slate-500 text-xs">{t.subtitle}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-end gap-2">
+                <div className="flex items-center gap-1 bg-white rounded-lg p-1 border border-slate-200 shadow-sm">
+                  <Globe size={14} className="ml-2 text-slate-400" />
+                  <button onClick={() => setUiLang('zh')} className={`px-2 py-1 text-xs rounded-md transition-all ${uiLang === 'zh' ? 'bg-teal-50 text-teal-700 font-bold' : 'text-slate-500 hover:text-slate-700'}`}>中文</button>
+                  <button onClick={() => setUiLang('en')} className={`px-2 py-1 text-xs rounded-md transition-all ${uiLang === 'en' ? 'bg-teal-50 text-teal-700 font-bold' : 'text-slate-500 hover:text-slate-700'}`}>EN</button>
+                  <button onClick={() => setUiLang('id')} className={`px-2 py-1 text-xs rounded-md transition-all ${uiLang === 'id' ? 'bg-teal-50 text-teal-700 font-bold' : 'text-slate-500 hover:text-slate-700'}`}>ID</button>
+                </div>
+              </div>
+            </header>
+
+            {/* Google Sites Warning */}
+            {isIframe && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-start gap-3 text-sm text-yellow-800">
+                <AlertTriangle size={18} className="shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">檢測到嵌入模式 (Google Sites)</p>
+                  <p className="text-xs opacity-90">由於 Google Sites 安全限制，麥克風可能會被封鎖。若點擊「口說練習」無反應，請點擊下方按鈕在新視窗開啟。</p>
+                  <a href={window.location.href} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block bg-white border border-yellow-300 px-3 py-1 rounded text-xs font-bold hover:bg-yellow-100 transition-colors">在新視窗開啟本頁</a>
+                </div>
+              </div>
+            )}
+
+            <div className="grid lg:grid-cols-12 gap-4">
+
+              {/* Left Panel */}
+              <div className="lg:col-span-4 flex flex-col gap-3">
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3 space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+                    <Book size={16} /> {t.selectLesson}
+                  </div>
+                  <div className="relative">
+                    <select
+                      value={selectedLesson}
+                      onChange={(e) => handleLessonChange(e.target.value)}
+                      className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 py-2 px-3 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-teal-500 text-sm"
+                    >
+                      <option value="">{t.manualInput}</option>
+                      {textbookData.map(lesson => (
+                        <option key={lesson.id} value={lesson.id}>{lesson.title}</option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500"><ChevronDown size={14} /></div>
+                  </div>
+
+                  {selectedLesson && (
+                    <div className="relative animate-fadeIn">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-1 mt-1">
+                        {t.selectPara}
+                      </div>
+                      <select
+                        value={selectedPara}
+                        onChange={(e) => handleParaChange(e.target.value)}
+                        className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-700 py-2 px-3 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-teal-500 text-sm"
+                      >
+                        <option value="all">{t.allText}</option>
+                        {textbookData.find(l => l.id === selectedLesson)?.paragraphs.map((p, idx) => (
+                          <option key={idx} value={idx}>{t.paraPrefix}{idx + 1}{t.paraSuffix} ({p.substring(0, 10)}...)</option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute bottom-3 right-0 flex items-center px-2 text-slate-500"><ChevronDown size={14} /></div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full min-h-[200px]">
+                  <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
+                    <span className="font-medium text-slate-600 flex items-center gap-2 text-sm">
+                      <Type size={16} /> {t.inputLabel}
+                    </span>
+                    <button onClick={handleClear} className="text-xs text-slate-400 hover:text-red-500 transition-colors">{t.clear}</button>
+                  </div>
+                  <textarea
+                    className="flex-1 w-full p-4 resize-none outline-none text-base text-slate-700 leading-relaxed bg-white"
+                    placeholder={t.placeholder}
+                    value={inputText}
+                    onChange={(e) => {
+                      setInputText(e.target.value);
+                      if (selectedLesson) setSelectedLesson("");
+                      setMatchResult([]);
+                      setAccuracyScore(null);
+                      setAudioURL(null); // 文字變更時清除錄音
+                    }}
+                  />
+                </div>
+
+                <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-200 space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-500 mb-1">
+                    <Settings size={16} /> {t.settings}
+                  </div>
+
+                  {/* 語音選擇 */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-slate-500"><span>{t.voice}</span></div>
+                    <div className="relative">
+                      <select
+                        value={selectedVoiceURI}
+                        onChange={(e) => setSelectedVoiceURI(e.target.value)}
+                        className="w-full appearance-none bg-slate-100 border border-slate-200 text-slate-700 py-1.5 px-2 pr-6 rounded leading-tight focus:outline-none focus:bg-white focus:border-teal-500 text-xs"
+                      >
+                        {voices.length > 0 ? voices.map(v => (
+                          <option key={v.voiceURI} value={v.voiceURI}>{v.name}</option>
+                        )) : <option value="">{t.defaultVoice}</option>}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500"><ChevronDown size={12} /></div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-slate-500"><span>{t.rate}</span><span>{speechRate}x</span></div>
+                    <input type="range" min="0.5" max="1.5" step="0.1" value={speechRate} onChange={(e) => setSpeechRate(parseFloat(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-slate-500"><span>{t.size}</span><span>{fontSize}px</span></div>
+                    <input type="range" min="16" max="48" step="2" value={fontSize} onChange={(e) => setFontSize(parseInt(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600" />
+                  </div>
+                  <div className="flex bg-slate-100 p-1 rounded-lg">
+                    <button onClick={() => setViewMode('block')} className={`flex-1 py-1.5 text-xs rounded-md transition-all ${viewMode === 'block' ? 'bg-white text-teal-700 shadow-sm font-bold' : 'text-slate-500'}`}>{t.blockMode}</button>
+                    <button onClick={() => setViewMode('spacing')} className={`flex-1 py-1.5 text-xs rounded-md transition-all ${viewMode === 'spacing' ? 'bg-white text-teal-700 shadow-sm font-bold' : 'text-slate-500'}`}>{t.textMode}</button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Panel */}
+              <div className="lg:col-span-8 flex flex-col gap-3">
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={handlePlayPause} className={`flex-1 sm:flex-none flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold transition-all shadow-sm ${isPlaying ? 'bg-orange-100 text-orange-600 border border-orange-200 hover:bg-orange-200' : 'bg-teal-600 text-white hover:bg-teal-700 hover:shadow-md'}`}>
+                    {isPlaying ? <Pause size={18} /> : <Play size={18} />} {isPlaying ? t.pause : t.play}
+                  </button>
+                  <button onClick={toggleRecording} disabled={isPlaying} className={`flex-1 sm:flex-none flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold transition-all shadow-sm border ${isPlaying ? 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-400 border-slate-200' : ''} ${isRecording ? 'bg-red-500 text-white border-red-600 animate-pulse' : !isPlaying && 'bg-white text-slate-700 border-slate-200 hover:border-teal-500 hover:text-teal-600'}`}>
+                    {isRecording ? <MicOff size={18} /> : <Mic size={18} />} {isRecording ? t.stopRecord : t.record}
+                  </button>
+                  <button onClick={handleReset} className="p-2.5 text-slate-400 bg-white border border-slate-200 rounded-xl hover:text-slate-600 hover:bg-slate-50 transition-colors" title={t.resetTitle}><RotateCcw size={18} /></button>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden flex flex-col h-[500px] lg:h-[600px]">
+                  <div className="bg-slate-50 px-4 py-2 border-b border-slate-100 flex justify-between items-center min-h-[40px]">
+                    <div className="flex items-center gap-2">
+                      {isPlaying && <span className="text-xs font-bold text-orange-500 flex items-center gap-1 animate-pulse"><Volume2 size={14} /> {t.reading}</span>}
+                      {isRecording && <span className="text-xs font-bold text-red-500 flex items-center gap-1 animate-pulse"><Mic size={14} /> {t.recording}</span>}
+                      {!isPlaying && !isRecording && !accuracyScore && <span className="text-xs text-slate-400">{t.ready}</span>}
+                      {accuracyScore !== null && (
+                        <div className={`flex items-center gap-2 px-2 py-0.5 rounded-full text-xs font-bold border ${accuracyScore >= 90 ? 'bg-green-50 text-green-700 border-green-200' : accuracyScore >= 70 ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                          {accuracyScore >= 90 ? <CheckCircle size={14} /> : <AlertCircle size={14} />} {t.accuracy}: {accuracyScore}%
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-400 hidden sm:block">{t.clickHint}</span>
+                  </div>
+
+                  <div className="p-6 leading-loose overflow-y-auto flex-1 bg-white">
+                    <div className="flex flex-wrap gap-y-3 content-start" style={{ fontSize: `${fontSize}px` }}>
+                      {displaySegments.length > 0 ? (
+                        displaySegments.map((seg, idx) => {
+                          const isPunctuation = !seg.isWordLike;
+                          const isSelected = selectedWord === seg.word;
+                          const isReadingNow = highlightIndex === idx;
+                          let statusColorClass = '';
+                          if (seg.status === 'correct') statusColorClass = 'bg-green-100 text-green-800 border-green-200';
+                          else if (seg.status === 'missed') statusColorClass = 'bg-red-50 text-red-400 border-red-100 line-through decoration-red-300';
+                          const defaultBlockClass = isReadingNow ? 'bg-orange-400 text-white shadow-md scale-105 z-10' : 'bg-teal-50 text-slate-700 border-teal-100 hover:border-teal-300 hover:bg-teal-100';
+                          const activeClass = seg.status ? statusColorClass : defaultBlockClass;
+
+                          if (viewMode === 'block') {
+                            return (
+                              <span key={idx} onClick={() => !isPunctuation && speakWord(seg.word)} className={`transition-all duration-200 rounded-lg px-2 mx-0.5 select-none cursor-pointer border ${isPunctuation ? 'text-slate-400 bg-transparent border-transparent cursor-default' : 'hover:scale-105 active:scale-95'} ${!isPunctuation ? activeClass : ''} ${isSelected && !isPunctuation && !isReadingNow && !seg.status ? 'bg-teal-600 text-white shadow-md' : ''}`}>
+                                {seg.word}
+                              </span>
+                            );
+                          } else {
+                            return (
+                              <span key={idx} onClick={() => !isPunctuation && speakWord(seg.word)} className={`relative px-[1px] transition-colors rounded cursor-pointer ${isPunctuation ? 'mx-0 text-slate-400' : 'mx-1'} ${isReadingNow ? 'bg-orange-200 text-orange-900 rounded px-1' : ''} ${seg.status === 'correct' ? 'text-green-600 font-medium' : ''} ${seg.status === 'missed' ? 'text-red-400 decoration-red-400 underline decoration-wavy' : ''} ${!isPunctuation && !isReadingNow && !seg.status && 'hover:bg-yellow-100 hover:text-yellow-800'}`}>
+                                {seg.word}
+                              </span>
+                            );
+                          }
+                        })
+                      ) : (
+                        <span className="text-slate-300 italic">{t.emptyHint}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 比對面板：只有在有錄音時顯示 */}
+                  {(accuracyScore !== null || audioURL) && (
+                    <div className="bg-slate-50 border-t border-slate-200 p-3 space-y-3">
+                      {/* 使用提示 */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+                        <div className="shrink-0 mt-0.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-bold text-blue-900 mb-1">💡 如何比對發音</p>
+                          <div className="text-[11px] text-blue-700 space-y-1">
+                            <p>• <strong>聽 AI 發音</strong> = 播放標準華語母語者發音</p>
+                            <p>• <strong>聽我的錄音</strong> = 播放你剛才錄的聲音</p>
+                            <p>• <strong>對比播放</strong> = 先播 AI → 停1秒 → 再播你的錄音（<span className="text-orange-600 font-bold">推薦!</span>）</p>
+                            <p>• <strong>下載錄音</strong> = 保存練習檔案</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 波形顯示 - 並排比對 */}
+                      {(userWaveformData || aiWaveformData) && (
+                        <div className="bg-white rounded-lg p-3 border border-slate-200">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-bold text-slate-700">📊 發音波形比對</span>
+                            <span className="text-[10px] text-slate-400">綠色=AI標準發音 | 橘色=你的發音</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {/* AI 波形 */}
+                            {aiWaveformData && (
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-1">
+                                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                  <span className="text-xs font-semibold text-green-700">AI 母語者發音</span>
+                                </div>
+                                <canvas
+                                  ref={aiCanvasRef}
+                                  width={600}
+                                  height={80}
+                                  className="w-full h-20 rounded border border-green-100"
+                                />
+                              </div>
+                            )}
+
+                            {/* 使用者波形 */}
+                            {userWaveformData && (
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-1">
+                                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                                  <span className="text-xs font-semibold text-orange-700">你的發音</span>
+                                </div>
+                                <canvas
+                                  ref={canvasRef}
+                                  width={600}
+                                  height={80}
+                                  className="w-full h-20 rounded border border-orange-100"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* 波形分析提示 */}
+                          <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded">
+                            <p className="text-[10px] text-amber-800">
+                              💡 <strong>如何看波形：</strong>波形高低代表音量大小，寬窄代表語速快慢。對比兩個波形，注意節奏和重音的差異。
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 控制按鈕區 */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t.compare}:</span>
+
+                        <button
+                          onClick={handlePlayPause}
+                          disabled={isComparePlaying}
+                          className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-full transition-colors border ${isComparePlaying
+                            ? 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-400 border-slate-200'
+                            : 'bg-white border-slate-300 hover:bg-slate-50 hover:text-teal-600'
+                            }`}
+                        >
+                          <Volume2 size={14} /> {t.playAI}
+                        </button>
+
+                        {audioURL ? (
+                          <>
+                            <button
+                              onClick={playUserAudio}
+                              disabled={isComparePlaying}
+                              className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-full transition-colors border ${isComparePlaying
+                                ? 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-400 border-slate-200'
+                                : isPlayingUserAudio
+                                  ? 'bg-teal-100 text-teal-700 border-teal-300'
+                                  : 'bg-white border-slate-300 hover:bg-slate-50 hover:text-teal-600'
+                                }`}
+                            >
+                              {isPlayingUserAudio ? <Pause size={14} /> : <Play size={14} />}
+                              {isPlayingUserAudio ? '播放中...' : t.playMyRec}
+                            </button>
+
+                            <button
+                              onClick={comparePlay}
+                              disabled={isComparePlaying || isPlaying || isPlayingUserAudio}
+                              className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-full transition-colors border ${isComparePlaying || isPlaying || isPlayingUserAudio
+                                ? 'opacity-50 cursor-not-allowed bg-slate-100 text-slate-400 border-slate-200'
+                                : 'bg-gradient-to-r from-teal-500 to-orange-500 text-white border-transparent hover:from-teal-600 hover:to-orange-600'
+                                }`}
+                            >
+                              <RotateCcw size={14} /> {isComparePlaying ? '播放中...' : t.comparePlay}
+                            </button>
+
+                            <button
+                              onClick={downloadRecording}
+                              className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full transition-colors border bg-white border-slate-300 hover:bg-slate-50 hover:text-blue-600"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                              </svg>
+                              {t.downloadRec}
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">{t.noRec}</span>
+                        )}
+
+                        <audio ref={userAudioRef} src={audioURL} className="hidden" />
+                      </div>
+
+                      {/* 評語區 */}
+                      {accuracyScore !== null && (
+                        <div className="bg-white rounded-lg p-3 border border-slate-100 shadow-sm">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs font-bold text-teal-600">{t.feedback}</span>
+                            <span className="text-xs text-slate-400">{t.accuracy}: {accuracyScore}%</span>
+                          </div>
+                          <p className="text-sm text-slate-700">{getFeedback(accuracyScore)}</p>
+                        </div>
+                      )}
+
+                      {/* 辨識文字顯示 */}
+                      <div className="mt-2 text-xs text-slate-400">
+                        <span className="font-bold mr-1">{t.yourSpeech}</span>
+                        <span className="text-slate-600">{spokenText || "..."}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="text-center text-xs text-slate-400">{t.browserHint}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<ChineseFlowReader />);
+  </script>
+</body>
+
+</html>
