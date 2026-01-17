@@ -474,6 +474,8 @@
         setSpokenText("");
         setAccuracyScore(null);
         setMatchResult([]);
+        setUserWaveformData(null);
+        setAiWaveformData(null);
       };
 
       // 下一句
@@ -1197,19 +1199,25 @@
               <div className="lg:col-span-8 flex flex-col gap-3">
                 {/* 單句模式導航 */}
                 {isSentenceMode && sentences.length > 0 && (
-                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-3">
-                    <p className="text-xs font-bold text-blue-900 mb-2">{t.sentenceTip}</p>
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-300 rounded-xl p-3 shadow-sm">
+                    <div className="flex items-start gap-2 mb-2">
+                      <span className="text-lg">🎯</span>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-blue-900">{t.sentenceTip}</p>
+                        <p className="text-xs text-blue-700 mt-0.5">適用於所有課文！選擇任何課文，都可以逐句練習</p>
+                      </div>
+                    </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-semibold text-blue-700">
-                        {t.currentSentence} <span className="text-lg">{currentSentenceIndex + 1}</span> / {t.totalSentences} {sentences.length} {t.sentences}
+                        {t.currentSentence} <span className="text-lg font-bold">{currentSentenceIndex + 1}</span> / {t.totalSentences} {sentences.length} {t.sentences}
                       </span>
                       <div className="flex gap-2">
                         <button
                           onClick={goToPrevSentence}
                           disabled={currentSentenceIndex === 0}
                           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${currentSentenceIndex === 0
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 hover:shadow-sm'
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              : 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 hover:shadow-sm'
                             }`}
                         >
                           ← {t.prevSentence}
@@ -1218,8 +1226,8 @@
                           onClick={goToNextSentence}
                           disabled={currentSentenceIndex >= sentences.length - 1}
                           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${currentSentenceIndex >= sentences.length - 1
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 hover:shadow-sm'
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              : 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 hover:shadow-sm'
                             }`}
                         >
                           {t.nextSentence} →
