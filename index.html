@@ -1208,8 +1208,8 @@
                           onClick={goToPrevSentence}
                           disabled={currentSentenceIndex === 0}
                           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${currentSentenceIndex === 0
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 hover:shadow-sm'
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 hover:shadow-sm'
                             }`}
                         >
                           ← {t.prevSentence}
@@ -1218,8 +1218,8 @@
                           onClick={goToNextSentence}
                           disabled={currentSentenceIndex >= sentences.length - 1}
                           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${currentSentenceIndex >= sentences.length - 1
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 hover:shadow-sm'
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 hover:shadow-sm'
                             }`}
                         >
                           {t.nextSentence} →
@@ -1444,6 +1444,22 @@
                 <div className="text-center text-xs text-slate-400">{t.browserHint}</div>
               </div>
             </div>
+
+            {/* 版權資訊 */}
+            <footer className="mt-8 py-6 border-t border-slate-200">
+              <div className="text-center space-y-2">
+                <p className="text-sm text-slate-600">
+                  © {new Date().getFullYear()} <strong>華語流利讀 - Chinese Flow Reader</strong>
+                </p>
+                <p className="text-xs text-slate-500">
+                  由 <a href="https://github.com/newwineteach" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-700 font-semibold">newwineteach</a> 開發 |
+                  授權方式：<span className="font-semibold">MIT License</span>
+                </p>
+                <p className="text-xs text-slate-400">
+                  專為華語學習者打造的智慧發音練習工具
+                </p>
+              </div>
+            </footer>
           </div>
         </div>
       );

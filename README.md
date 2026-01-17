@@ -4,7 +4,7 @@
 
 ## 🌐 線上使用
 
-👉 **立即使用：** https://newwineteach.github.io/chinese-reader/
+👉 **立即使用：** https://newwineteach.github.io/chinese-flow-reader/
 
 ## ✨ 功能特色
 
@@ -15,6 +15,7 @@
 - 🔄 **AI vs 使用者對比播放** - 先播 AI，停1秒，再播你的錄音
 - 💯 **準確度評分系統** - 自動分析發音準確度（0-100%）
 - 💾 **錄音下載功能** - 保存練習記錄
+- 🎯 **單句對比模式** - 逐句練習，更精準！（新功能）
 
 ## 🎓 適用對象
 
