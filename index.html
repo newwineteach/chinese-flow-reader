@@ -108,8 +108,8 @@
         id: "L3",
         title: "第三課 不平安的平安夜",
         paragraphs: [
-          "二○二二年的聖誕節，北美出現了四十年以來最強的一場暴風雪。這一場暴風雪，讓美國從東部到西部有三分之二的地區出現攝氏零度以下的低溫，連本來氣候溫暖的佛羅里達州、德州等，也出現下大雪的情形。不只是北美，歐洲同時也受到這個北極寒流的影響。",
-          "極低的氣溫，再加上強風與暴雪的影響，造成各地交通大亂，人們生活大受影響。暴風雪讓很多人一覺醒來發現汽車被雪埋住，沒辦法出門。道路上因為結了冰，或積雪太厚沒辦法剷除而造成嚴重塞車。更糟糕的是本來要搭飛機的旅客被困在機場。不只有美國，法國、德國也都出現了飛機班次被取消，停飛的情況。聖誕節對許多人來說，是一個重要的日子。住在外地的人，不管是工作或是求學，都希望在這一天回家跟家人團聚。被困在機場，和陌生人一起度過平安夜，恐怕成為許多人二○二年聖誕節的共同回憶。沒想到這個情形，在二○二三年的聖誕節再次發生。",
+          "二零二二年的聖誕節，北美出現了四十年以來最強的一場暴風雪。這一場暴風雪，讓美國從東部到西部有三分之二的地區出現攝氏零度以下的低溫，連本來氣候溫暖的佛羅里達州、德州等，也出現下大雪的情形。不只是北美，歐洲同時也受到這個北極寒流的影響。",
+          "極低的氣溫，再加上強風與暴雪的影響，造成各地交通大亂，人們生活大受影響。暴風雪讓很多人一覺醒來發現汽車被雪埋住，沒辦法出門。道路上因為結了冰，或積雪太厚沒辦法剷除而造成嚴重塞車。更糟糕的是本來要搭飛機的旅客被困在機場。不只有美國，法國、德國也都出現了飛機班次被取消，停飛的情況。聖誕節對許多人來說，是一個重要的日子。住在外地的人，不管是工作或是求學，都希望在這一天回家跟家人團聚。被困在機場，和陌生人一起度過平安夜，恐怕成為許多人二零二二年聖誕節的共同回憶。沒想到這個情形，在二零二三年的聖誕節再次發生。",
           "目前地球氣候異常是受到聖嬰現象或反聖嬰現象的影響。這兩種現象讓氣候變成兩個極端，本來寒冷地區的氣溫變得更低，有些地區在雨季時出現豪雨。不過，有些地區應該寒冷的冬天卻變得比較溫暖了，有些地區因為沒下雨而出現乾旱。氣候異常除了給人們生活帶來不便，甚至對農業、食品安全、能源都會造成極大的影響。為了我們能平安地生活，人們必須積極解決這個問題。"
         ]
       },
@@ -1176,22 +1176,6 @@
                     <button onClick={() => setViewMode('block')} className={`flex-1 py-1.5 text-xs rounded-md transition-all ${viewMode === 'block' ? 'bg-white text-teal-700 shadow-sm font-bold' : 'text-slate-500'}`}>{t.blockMode}</button>
                     <button onClick={() => setViewMode('spacing')} className={`flex-1 py-1.5 text-xs rounded-md transition-all ${viewMode === 'spacing' ? 'bg-white text-teal-700 shadow-sm font-bold' : 'text-slate-500'}`}>{t.textMode}</button>
                   </div>
-
-                  {/* 單句/全文模式切換 */}
-                  <div className="flex bg-slate-100 p-1 rounded-lg mt-2">
-                    <button
-                      onClick={() => setIsSentenceMode(false)}
-                      className={`flex-1 py-1.5 text-xs rounded-md transition-all ${!isSentenceMode ? 'bg-white text-teal-700 shadow-sm font-bold' : 'text-slate-500'}`}
-                    >
-                      {t.fullMode}
-                    </button>
-                    <button
-                      onClick={() => setIsSentenceMode(true)}
-                      className={`flex-1 py-1.5 text-xs rounded-md transition-all ${isSentenceMode ? 'bg-white text-teal-700 shadow-sm font-bold' : 'text-slate-500'}`}
-                    >
-                      {t.sentenceMode}
-                    </button>
-                  </div>
                 </div>
               </div>
 
@@ -1216,8 +1200,8 @@
                           onClick={goToPrevSentence}
                           disabled={currentSentenceIndex === 0}
                           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${currentSentenceIndex === 0
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 hover:shadow-sm'
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 hover:shadow-sm'
                             }`}
                         >
                           ← {t.prevSentence}
@@ -1226,8 +1210,8 @@
                           onClick={goToNextSentence}
                           disabled={currentSentenceIndex >= sentences.length - 1}
                           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${currentSentenceIndex >= sentences.length - 1
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                              : 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 hover:shadow-sm'
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 hover:shadow-sm'
                             }`}
                         >
                           {t.nextSentence} →
@@ -1237,7 +1221,33 @@
                   </div>
                 )}
 
-                <div className="flex flex-wrap gap-2">
+
+                <div className="flex flex-wrap gap-2 items-center">
+                  {/* 模式切換按鈕組 - 放在最前面 */}
+                  <div className="flex bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-300 p-1 rounded-xl shadow-sm">
+                    <button
+                      onClick={() => setIsSentenceMode(false)}
+                      className={`px-4 py-2 text-sm font-bold rounded-lg transition-all ${!isSentenceMode
+                        ? 'bg-white text-purple-700 shadow-md'
+                        : 'text-purple-500 hover:text-purple-700'
+                        }`}
+                    >
+                      📄 {t.fullMode}
+                    </button>
+                    <button
+                      onClick={() => setIsSentenceMode(true)}
+                      className={`px-4 py-2 text-sm font-bold rounded-lg transition-all ${isSentenceMode
+                        ? 'bg-white text-purple-700 shadow-md'
+                        : 'text-purple-500 hover:text-purple-700'
+                        }`}
+                    >
+                      🎯 {t.sentenceMode}
+                    </button>
+                  </div>
+
+                  {/* 分隔線 */}
+                  <div className="hidden sm:block w-px h-8 bg-slate-300"></div>
+
                   <button onClick={handlePlayPause} className={`flex-1 sm:flex-none flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold transition-all shadow-sm ${isPlaying ? 'bg-orange-100 text-orange-600 border border-orange-200 hover:bg-orange-200' : 'bg-teal-600 text-white hover:bg-teal-700 hover:shadow-md'}`}>
                     {isPlaying ? <Pause size={18} /> : <Play size={18} />} {isPlaying ? t.pause : t.play}
                   </button>
