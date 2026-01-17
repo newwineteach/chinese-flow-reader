@@ -1038,9 +1038,40 @@
         setAccuracyScore(score);
       };
 
-      const getFeedback = (score) => {
+      const getFeedback = (score, analysis = []) => {
         if (score === null) return "";
+
+        // 找出漏讀的字 (只列出前 3 個)
+        const missedWordsList = analysis
+          .filter(seg => seg.status === 'missed')
+          .map(seg => seg.word);
+
+        const missedWords = missedWordsList.slice(0, 3).join(uiLang === 'en' ? ", " : "、");
+        const hasMissed = missedWords.length > 0;
+
+        // 100分：完美
         if (score === 100) return t.excellent;
+
+        // 針對漏讀字提供具體建議
+        if (hasMissed) {
+          if (uiLang === 'zh') {
+            if (score >= 90) return `非常接近完美！但 Master 聽到你好像漏掉了「${missedWords}」。再注意一下這些字就無敵了！`;
+            if (score >= 80) return `發音很清晰，但「${missedWords}」這些字還要再加強。試著模仿 AI 的語調，把每個字唸滿。`;
+            if (score >= 60) return `聽得懂，但漏掉了不少字，例如「${missedWords}」。建議你放慢速度，一個字一個字清楚地唸。`;
+            return `Master 覺得你有點急躁，漏掉了像是「${missedWords}」等字。請深呼吸，靠近麥克風，慢慢再試一次！`;
+          } else if (uiLang === 'en') {
+            if (score >= 90) return `Almost perfect! But the Master missed: "${missedWords}". Watch out for these!`;
+            if (score >= 80) return `Clear, but you missed: "${missedWords}". Try to mimic the AI's tone for these.`;
+            if (score >= 60) return `Understandable, but you missed words like: "${missedWords}". Slow down and clear up.`;
+            return `The Master thinks you're rushing. You missed: "${missedWords}". Breathe, get closer to the mic, and try again!`;
+          } else {
+            // Fallback ID
+            if (score >= 90) return `Hampir sempurna! Tapi kamu melewatkan: "${missedWords}".`;
+            return `Kamu melewatkan: "${missedWords}". Coba pelan-pelan.`;
+          }
+        }
+
+        // 如果沒有具體漏字但分數未滿（例如字數太少或無法辨識）
         if (score >= 90) return t.great;
         if (score >= 80) return t.good;
         if (score >= 60) return t.fair;
@@ -1469,7 +1500,7 @@
                             </span>
                           </div>
                           <p className="text-sm font-medium text-slate-700 leading-relaxed">
-                            {getFeedback(accuracyScore)}
+                            {getFeedback(accuracyScore, matchResult)}
                           </p>
                         </div>
                       )}
